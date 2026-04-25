@@ -1,65 +1,290 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 
 <head>
-    <title>Footwear Classification</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" async></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SoleAI – Footwear Intelligence</title>
+    <meta name="description" content="KI-gestützte Schuhklassifizierung mit Deep Java Library (DJL). Lade ein Bild hoch und erkenne Schuhtypen in Echtzeit." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-    <div class="container-fluid">
-        <h1>👟 Footwear Classification</h1>
-        <p class="subtitle">DeepJavaLibrary (DJL) Demonstration by mosa</p>
+    <!-- Animated background particles -->
+    <div class="bg-particles" id="bgParticles"></div>
 
-        <div class="card border-0">
-            <div class="card-body">
-                <h5>Upload Footwear Image</h5>
-                <form>
-                    <div class="form-group">
-                        <input type="file" accept="image/png, image/jpeg" class="form-control-file" id="image" name="image"
-                            onchange="checkFiles(this.files);">
-                        <small class="form-text text-muted">Maximum file size: 10 MB (PNG, JPEG)</small>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="answerPart" class="hidden">
-            <!-- Results Container with Image Left and Results Right -->
-            <div class="results-container">
-                <!-- Image Preview Section -->
-                <div class="preview-section">
-                    <h5>Analyzed Image</h5>
-                    <img id="preview" src="#" alt="preview" />
+    <!-- Header / Hero -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 28 C8 20 14 16 22 17 L32 18 C35 18 36 22 34 24 L10 30 C7 31 4 30 5 28Z" fill="url(#shoe-grad)" />
+                        <path d="M22 17 L24 10 C25 7 28 7 29 10 L32 18" stroke="url(#shoe-grad)" stroke-width="2" fill="none"/>
+                        <defs>
+                            <linearGradient id="shoe-grad" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#8b5cf6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
                 </div>
-
-                <!-- Loading Indicator -->
-                <div id="loadingPart" class="loading" style="display: none;">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                    <p>Analyzing image...</p>
-                </div>
-
-                <!-- Results Section -->
-                <div id="resultsPart" class="results-section" style="display: none;">
-                    <h5>Classification Results</h5>
-                    <div id="topResult" class="classification-item top-result" style="display: none;">
-                        <div class="classification-label" id="topLabel"></div>
-                        <div class="classification-percentage" id="topPercentage"></div>
-                    </div>
-                    <div id="classificationList"></div>
+                <div>
+                    <h1 class="site-title">SoleAI</h1>
+                    <p class="site-tagline">Footwear Intelligence</p>
                 </div>
             </div>
+            <nav class="header-nav">
+                <button class="nav-btn active" id="navAnalyze" onclick="showTab('analyze')">Analyse</button>
+                <button class="nav-btn" id="navHistory" onclick="showTab('history')">Verlauf <span class="badge" id="historyBadge">0</span></button>
+                <button class="nav-btn" id="navAbout" onclick="showTab('about')">Über</button>
+            </nav>
         </div>
-    </div>
+    </header>
 
+    <main class="main-content">
+
+        <!-- ===== TAB: ANALYZE ===== -->
+        <section id="tabAnalyze" class="tab-panel active">
+
+            <!-- Upload Card -->
+            <div class="card upload-card" id="uploadCard">
+                <div class="card-header">
+                    <div class="card-icon">📤</div>
+                    <div>
+                        <h2 class="card-title">Bild hochladen</h2>
+                        <p class="card-subtitle">PNG oder JPEG, max. 10 MB</p>
+                    </div>
+                </div>
+
+                <div class="drop-zone" id="dropZone"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)"
+                     onclick="document.getElementById('imageInput').click()">
+                    <div class="drop-zone-inner">
+                        <div class="drop-icon" id="dropIcon">
+                            <svg viewBox="0 0 64 64" fill="none">
+                                <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4" />
+                                <path d="M32 42 V22 M24 30 L32 22 L40 30" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p class="drop-title" id="dropTitle">Datei hierhin ziehen</p>
+                        <p class="drop-sub">oder klicken zum Auswählen</p>
+                        <div class="drop-formats">
+                            <span class="format-badge">PNG</span>
+                            <span class="format-badge">JPEG</span>
+                            <span class="format-badge">max 10 MB</span>
+                        </div>
+                    </div>
+                    <input type="file" id="imageInput" accept="image/png, image/jpeg" style="display:none"
+                           onchange="checkFiles(this.files)" />
+                </div>
+            </div>
+
+            <!-- Results Area -->
+            <div id="answerPart" class="hidden">
+
+                <!-- Loading State -->
+                <div id="loadingPart" style="display:none;" class="card loading-card">
+                    <div class="loading-animation">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring delay-1"></div>
+                        <div class="pulse-ring delay-2"></div>
+                        <div class="loading-shoe">👟</div>
+                    </div>
+                    <p class="loading-text">KI analysiert Bild<span class="dots"></span></p>
+                    <div class="loading-bar-wrap">
+                        <div class="loading-bar-track">
+                            <div class="loading-bar-fill" id="loadingBarFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Grid -->
+                <div id="resultsPart" style="display:none;" class="results-grid">
+
+                    <!-- Image Preview -->
+                    <div class="card preview-card">
+                        <div class="card-header">
+                            <div class="card-icon">🖼️</div>
+                            <div>
+                                <h2 class="card-title">Analysiertes Bild</h2>
+                                <p class="card-subtitle" id="fileName">—</p>
+                            </div>
+                        </div>
+                        <div class="preview-wrap">
+                            <img id="preview" src="#" alt="Vorschau des hochgeladenen Schuhs" />
+                            <div class="preview-overlay">
+                                <span class="scan-line"></span>
+                            </div>
+                        </div>
+                        <div class="image-meta" id="imageMeta"></div>
+                    </div>
+
+                    <!-- Classification Results -->
+                    <div class="card results-card">
+                        <div class="card-header">
+                            <div class="card-icon">🎯</div>
+                            <div>
+                                <h2 class="card-title">Klassifizierungsergebnisse</h2>
+                                <p class="card-subtitle" id="analysisTime">—</p>
+                            </div>
+                        </div>
+
+                        <!-- Top Result Hero -->
+                        <div id="topResult" class="top-result-hero" style="display:none;">
+                            <div class="top-result-content">
+                                <div class="top-emoji" id="topEmoji">👟</div>
+                                <div class="top-info">
+                                    <div class="top-label-row">
+                                        <span class="top-category-tag" id="topLabel">—</span>
+                                        <span class="confidence-badge" id="topPercentage">—</span>
+                                    </div>
+                                    <div class="confidence-meter">
+                                        <div class="confidence-track">
+                                            <div class="confidence-fill" id="topConfidenceFill" style="width:0%"></div>
+                                        </div>
+                                        <span class="confidence-label" id="topConfidenceLabel">Konfidenz</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- All Classifications -->
+                        <div id="classificationList" class="classification-list"></div>
+
+                        <!-- Action Buttons -->
+                        <div class="result-actions">
+                            <button class="action-btn primary" onclick="analyzeNew()">
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+                                Neues Bild
+                            </button>
+                            <button class="action-btn secondary" onclick="downloadResult()">
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                Exportieren
+                            </button>
+                            <button class="action-btn ghost" onclick="shareResult()">
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>
+                                Teilen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorPart" style="display:none;" class="card error-card">
+                    <div class="error-icon">⚠️</div>
+                    <h3 class="error-title">Analyse fehlgeschlagen</h3>
+                    <p class="error-msg" id="errorMsg">Ein unbekannter Fehler ist aufgetreten.</p>
+                    <button class="action-btn primary" onclick="analyzeNew()">Erneut versuchen</button>
+                </div>
+
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar" id="statsBar" style="display:none;">
+                <div class="stat-item">
+                    <span class="stat-value" id="statTotal">0</span>
+                    <span class="stat-label">Analysen</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statAvgConf">—</span>
+                    <span class="stat-label">Ø Konfidenz</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statTopCat">—</span>
+                    <span class="stat-label">Häufigste Kategorie</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ===== TAB: HISTORY ===== -->
+        <section id="tabHistory" class="tab-panel">
+            <div class="card history-card">
+                <div class="card-header">
+                    <div class="card-icon">🕐</div>
+                    <div>
+                        <h2 class="card-title">Analyse-Verlauf</h2>
+                        <p class="card-subtitle">Letzte Klassifizierungen dieser Sitzung</p>
+                    </div>
+                    <button class="action-btn ghost small" onclick="clearHistory()" style="margin-left:auto;">Löschen</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <div class="history-empty">
+                        <div class="history-empty-icon">👟</div>
+                        <p>Noch keine Analysen vorhanden.</p>
+                        <p class="history-empty-sub">Lade ein Bild hoch, um zu starten.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TAB: ABOUT ===== -->
+        <section id="tabAbout" class="tab-panel">
+            <div class="about-grid">
+                <div class="card about-hero-card">
+                    <div class="about-logo">👟</div>
+                    <h2 class="about-title">SoleAI</h2>
+                    <p class="about-desc">KI-gestützte Schuh&shy;klassifizierung mit Deep Java Library (DJL) – entwickelt als Demo-Anwendung für maschinelles Lernen in Java.</p>
+                    <div class="tech-chips">
+                        <span class="tech-chip">DJL</span>
+                        <span class="tech-chip">Spring Boot</span>
+                        <span class="tech-chip">ResNet</span>
+                        <span class="tech-chip">Java 17</span>
+                    </div>
+                </div>
+                <div class="card about-info-card">
+                    <h3 class="about-section-title">Wie es funktioniert</h3>
+                    <ol class="about-steps">
+                        <li class="about-step">
+                            <span class="step-num">01</span>
+                            <div>
+                                <strong>Bild hochladen</strong>
+                                <p>Ziehe ein PNG- oder JPEG-Bild eines Schuhs in das Upload-Feld.</p>
+                            </div>
+                        </li>
+                        <li class="about-step">
+                            <span class="step-num">02</span>
+                            <div>
+                                <strong>KI-Verarbeitung</strong>
+                                <p>Das Bild wird an ein vortrainiertes neuronales Netz (DJL) gesendet.</p>
+                            </div>
+                        </li>
+                        <li class="about-step">
+                            <span class="step-num">03</span>
+                            <div>
+                                <strong>Ergebnisse anzeigen</strong>
+                                <p>Die Top-Kategorie sowie alle weiteren Klassen mit Konfidenz werden angezeigt.</p>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                <div class="card about-info-card">
+                    <h3 class="about-section-title">Unterstützte Kategorien</h3>
+                    <div class="category-grid" id="categoryGrid">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <p>SoleAI · DJL Footwear Demo · <span id="footerYear"></span></p>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
 </body>
-
 </html>
