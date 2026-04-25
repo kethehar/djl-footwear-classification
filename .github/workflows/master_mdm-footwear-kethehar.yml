@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy container app to Azure Web App - mdm-footwear-kethehar
 
 on:
@@ -8,15 +5,15 @@ on:
     branches:
       - master
   workflow_dispatch:
+
 permissions:
   contents: read
   packages: write
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
+    # Die lokalen permissions hier wurden entfernt, damit die globalen (packages: write) gelten
 
     steps:
       - uses: actions/checkout@v4
@@ -27,28 +24,27 @@ jobs:
       - name: Log in to container registry
         uses: docker/login-action@v2
         with:
-          registry: https://github.com/kethehar/djl-footwear-classification/
-          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_6175A5C1818F4AE784722422FF70CCE9 }}
-          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_3DA4033810364E90B61BAFABFDC3583E }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push container image to registry
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
+          # Hier den Namen beibehalten
           tags: ghcr.io/kethehar/djl-footwear-classification:latest
           file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
     needs: build
-    
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,5 +58,5 @@ jobs:
         with:
           app-name: 'mdm-footwear-kethehar'
           slot-name: 'Production'
-          images: 'github.com/kethehar/djl-footwear-classification/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_6175A5C1818F4AE784722422FF70CCE9 }}/:${{ github.sha }}'
-          
+          # WICHTIG: Muss exakt mit dem Tag von oben übereinstimmen!
+          images: 'ghcr.io/kethehar/djl-footwear-classification:latest'
