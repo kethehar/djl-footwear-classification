@@ -33,7 +33,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: github.com/kethehar/djl-footwear-classification/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_6175A5C1818F4AE784722422FF70CCE9 }}/:${{ github.sha }}
+          tags: ghcr.io/dein-benutzername/djl-footwear-classification:latest
           file: ./Dockerfile
 
   deploy:
