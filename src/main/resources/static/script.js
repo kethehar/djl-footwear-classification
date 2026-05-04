@@ -11,9 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     populateCategories();
 });
 
-function updateFooterYear() {
-    document.getElementById('footerYear').textContent = new Date().getFullYear();
-}
+
 
 // --- Tab Navigation ---
 function showTab(tabId) {
